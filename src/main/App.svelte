@@ -4,7 +4,7 @@
 
 <!-- HTML -->
 <main>
-  <Gameboard />
+  <Gameboard width={10} height={10} bombCoordinates={new Set(["0/0"])} />
 </main>
 
 <!-- Style -->
