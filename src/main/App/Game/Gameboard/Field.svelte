@@ -2,41 +2,63 @@
   export let isBomb = false
   export let neighborBombs = 0
   export let button: HTMLButtonElement | null = null
-  let disabled = false
-  let flagged = false
-  let bomb = false
+
+  let status: "neutral" | "flagged" | "maybe" | "safe" | "bomb" = "neutral"
+  $: disabled = status === "safe" || status === "bomb"
+  $: textContent = disabled && neighborBombs ? neighborBombs : null
+
+  function handleLeftClick() {
+    if (status === "neutral") {
+      if (isBomb) status = "bomb"
+      else status = "safe"
+    }
+  }
+
+  function handleRightClick() {
+    switch (status) {
+      case "neutral":
+        status = "flagged"
+        break
+      case "flagged":
+        status = "maybe"
+        break
+      case "maybe":
+        status = "neutral"
+    }
+  }
 </script>
 
 <!-- HTML -->
 <button
   {disabled}
   aria-label="field"
-  class="field"
-  class:flagged
-  class:bomb
-  on:click={() => {
-    disabled = true
-    if (isBomb) bomb = true
-  }}
-  on:contextmenu|preventDefault={() => (flagged = true)}
-  bind:this={button}
+  class={status}
   on:click
+  on:click={handleLeftClick}
+  on:contextmenu|preventDefault={handleRightClick}
+  bind:this={button}
 >
-  {neighborBombs}
+  {#if status === "bomb"}
+    💣
+  {:else if textContent}
+    {textContent}
+  {:else if status === "flagged"}
+    🚩
+  {:else if status === "maybe"}
+    ❓
+  {/if}
 </button>
 
 <!-- Style -->
 <style lang="scss">
-  .field {
+  button {
     $size: 2rem;
 
     height: $size;
     width: $size;
-    color: transparent;
+    vertical-align: middle;
 
-    &:disabled {
-      color: black;
-    }
+    color: black;
   }
 
   .flagged {
@@ -44,6 +66,6 @@
   }
 
   .bomb {
-    background-color: red;
+    background-color: rgb(204, 114, 114);
   }
 </style>

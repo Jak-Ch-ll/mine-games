@@ -1,6 +1,7 @@
 <script lang="ts">
+  import type { BombCoordinates, Coord } from "./Gameboard"
+
   import Field from "./Gameboard/Field.svelte"
-  import type { BombCoordinates, Coord } from "./Gameboard.d"
 
   export let width: number
   export let height: number

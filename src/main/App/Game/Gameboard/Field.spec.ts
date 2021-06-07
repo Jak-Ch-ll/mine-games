@@ -9,6 +9,11 @@ describe("file Field.svelte", () => {
     render(Field, componentOptions)
     return screen.getByRole("button", { name: "field" })
   }
+
+  const leftClick = async (ele: HTMLElement) => await userEvent.click(ele)
+  const rightClick = async (ele: HTMLElement) =>
+    await userEvent.click(ele, { button: 2 })
+
   it("is disabled after clicking with left mouse button", async () => {
     expect.hasAssertions()
     const button = setupAndGetButton()
@@ -20,17 +25,25 @@ describe("file Field.svelte", () => {
     expect(button).toBeDisabled()
   })
 
-  it("gets the class 'flagged' after right mouse click", async () => {
+  it("has the correct number of neighboring bombs as text-content after click, if it is not a bomb", async () => {
+    expect.hasAssertions()
+    const num = Math.floor(Math.random() * 9)
+    const button = setupAndGetButton({ neighborBombs: num })
+
+    expect(button).toBeEmptyDOMElement()
+
+    await leftClick(button)
+
+    expect(button).toHaveTextContent(num.toString())
+  })
+
+  it("shows an empty string instead of zero after click, if it has no neighboring bombs", async () => {
     expect.hasAssertions()
     const button = setupAndGetButton()
 
-    expect(button).not.toHaveClass("flagged")
+    await leftClick(button)
 
-    await userEvent.click(button, {
-      button: 2,
-    })
-
-    expect(button).toHaveClass("flagged")
+    expect(button).toBeEmptyDOMElement()
   })
 
   it("gets the class 'bomb' after click, if it is a bomb", async () => {
@@ -39,27 +52,66 @@ describe("file Field.svelte", () => {
 
     expect(button).not.toHaveClass("bomb")
 
-    await userEvent.click(button)
+    await leftClick(button)
 
     expect(button).toHaveClass("bomb")
   })
 
-  it("has the correct number of neighboring bombs as text-content if it is not a bomb", async () => {
+  it("does show '💣' instead of a number after lick, if it is a bomb", async () => {
     expect.hasAssertions()
-    const num = Math.floor(Math.random() * 9)
-    const button = setupAndGetButton({ neighborBombs: num })
+    const button = setupAndGetButton({ isBomb: true, neighborBombs: 1 })
 
-    expect(button).toHaveTextContent(num.toString())
+    expect(button).toBeEmptyDOMElement()
+
+    await leftClick(button)
+
+    expect(button).toHaveTextContent("💣")
   })
 
-  it("has no visible text before click and visible text after click", async () => {
+  it("gets the class 'flagged' after right mouse click", async () => {
     expect.hasAssertions()
     const button = setupAndGetButton()
 
-    expect(button).toHaveStyle("color: transparent")
+    expect(button).not.toHaveClass("flagged")
 
-    await userEvent.click(button)
+    await rightClick(button)
 
-    expect(button).not.toHaveStyle("color: transparent")
+    expect(button).toHaveClass("flagged")
+  })
+
+  it("does show '🚩' after right click while active", async () => {
+    expect.hasAssertions()
+    const button = setupAndGetButton()
+
+    await rightClick(button)
+
+    expect(button).toHaveTextContent("🚩")
+  })
+
+  it("does show '❓' after 2 right clicks while active", async () => {
+    expect.hasAssertions()
+    const button = setupAndGetButton()
+
+    await rightClick(button)
+    await rightClick(button)
+
+    expect(button).toHaveTextContent("❓")
+  })
+
+  it("does not allow field to be activated after 1 or 2 rights click, only after 3", async () => {
+    expect.hasAssertions()
+    const button = setupAndGetButton()
+
+    await rightClick(button)
+    await leftClick(button)
+    expect(button).toBeEnabled()
+
+    await rightClick(button)
+    await leftClick(button)
+    expect(button).toBeEnabled()
+
+    await rightClick(button)
+    await leftClick(button)
+    expect(button).toBeDisabled()
   })
 })

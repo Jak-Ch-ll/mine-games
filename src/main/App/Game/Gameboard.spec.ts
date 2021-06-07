@@ -62,12 +62,14 @@ describe("file Game.svelte", () => {
     }
   })
 
-  it("renders fields with the correct number of bombs for non-bomb-fields", () => {
+  it("renders fields with the correct number of bombs for non-bomb-fields", async () => {
     expect.hasAssertions()
     const bombCoordinates: BombCoordinates = new Set(["0/1", "1/0", "1/1"])
     const fields = setupAndReturnFields({ bombCoordinates })
 
     const firstField = fields[0]
+
+    await userEvent.click(firstField)
 
     expect(firstField).toHaveTextContent("3")
   })
