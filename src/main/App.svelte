@@ -1,10 +1,10 @@
 <script lang="ts">
-  import Gameboard from "./App/Gameboard.svelte"
+  import Game from "./App/Game.svelte"
 </script>
 
 <!-- HTML -->
 <main>
-  <Gameboard width={10} height={10} bombCoordinates={new Set(["0/0"])} />
+  <Game />
 </main>
 
 <!-- Style -->
