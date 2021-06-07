@@ -5,19 +5,19 @@ import Gameboard from "./Gameboard.svelte"
 
 describe("file Game.svelte", () => {
   interface SetupProps {
-    width?: number
-    height?: number
+    columns?: number
+    rows?: number
     bombCoordinates?: BombCoordinates
   }
 
   const setupAndReturnFields = ({
-    width = 10,
-    height = 10,
+    columns = 10,
+    rows = 10,
     bombCoordinates,
   }: SetupProps) => {
     render(Gameboard, {
-      width: width,
-      height: height,
+      columns,
+      rows,
       bombCoordinates,
     })
 
@@ -27,12 +27,12 @@ describe("file Game.svelte", () => {
   it("renders a number of fields depending on input", () => {
     expect.hasAssertions()
 
-    const width = 21
-    const height = 23
+    const columns = 21
+    const rows = 23
 
-    const fields = setupAndReturnFields({ width, height })
+    const fields = setupAndReturnFields({ columns, rows })
 
-    expect(fields).toHaveLength(width * height)
+    expect(fields).toHaveLength(columns * rows)
   })
 
   it("has a field with class 'bomb' after clicking on a bomb coordinate", async () => {

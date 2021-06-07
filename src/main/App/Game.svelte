@@ -4,16 +4,16 @@
   import Gameboard from "./Game/Gameboard.svelte"
 
   let gameStarted = false
-  let width = 10
-  let height = 10
+  let columns = 10
+  let rows = 10
   let bombs = 10
 
   function generateBombCoordinates(numOfBombs: number) {
     const coordinates = new Set<Coord>()
 
     while (coordinates.size < numOfBombs) {
-      const row = Math.floor(Math.random() * height)
-      const col = Math.floor(Math.random() * width)
+      const row = Math.floor(Math.random() * rows)
+      const col = Math.floor(Math.random() * columns)
 
       coordinates.add(`${row}/${col}`)
     }
@@ -23,29 +23,45 @@
 </script>
 
 <!-- HTML -->
-<form>
-  <label>
-    Width:
-    <input type="number" bind:value={width} />
-  </label>
-  <label>
-    Height:
-    <input type="number" bind:value={height} />
-  </label>
-  <label>
-    Bombs:
-    <input type="number" bind:value={bombs} />
-  </label>
+{#if !gameStarted}
+  <form
+    aria-label="setup"
+    on:change={() => {
+      if (columns < 1) columns = 1
+      if (rows < 1) rows = 1
+      if (bombs < 1) bombs = 1
 
-  <button on:click|preventDefault={() => (gameStarted = true)} class="test"
-    >Start Game</button
+      const maxBombs = (rows * columns) / 2
+      if (bombs > maxBombs) bombs = maxBombs
+    }}
   >
-</form>
+    <label>
+      Columns:
+      <input type="number" bind:value={columns} min="1" />
+    </label>
+    <label>
+      Rows:
+      <input type="number" bind:value={rows} min="1" />
+    </label>
+    <label>
+      Bombs:
+      <input
+        type="number"
+        bind:value={bombs}
+        min="1"
+        max={(rows * columns) / 2}
+      />
+    </label>
 
-{#if gameStarted}
+    <button on:click|preventDefault={() => (gameStarted = true)} class="test"
+      >Start Game</button
+    >
+  </form>
+{:else}
+  <button on:click={() => (gameStarted = false)}>New Game</button>
   <Gameboard
-    {width}
-    {height}
+    {columns}
+    {rows}
     bombCoordinates={generateBombCoordinates(bombs)}
   />
 {/if}

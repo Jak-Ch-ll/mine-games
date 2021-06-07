@@ -3,8 +3,8 @@
 
   import Field from "./Gameboard/Field.svelte"
 
-  export let width: number
-  export let height: number
+  export let columns: number
+  export let rows: number
   export let bombCoordinates: BombCoordinates = new Set()
 
   interface MappedField {
@@ -16,9 +16,9 @@
   type BoardMap = MappedField[][]
 
   const boardMap: BoardMap = Array.from(
-    { length: height },
+    { length: rows },
     (_, i): MappedField[] => {
-      return Array.from({ length: width }, (_, j): MappedField => {
+      return Array.from({ length: columns }, (_, j): MappedField => {
         const id: Coord = `${i}/${j}`
         return {
           id,
@@ -33,11 +33,11 @@
 
     for (let i = row - 1; i <= row + 1; i++) {
       // skip iteration if exceeding board
-      if (i < 0 || i >= height) continue
+      if (i < 0 || i >= rows) continue
 
       for (let j = col - 1; j <= col + 1; j++) {
         // skip iteration if exceeding board
-        if (j < 0 || j >= width) continue
+        if (j < 0 || j >= columns) continue
 
         if (boardMap[i][j].isBomb) counter++
       }
@@ -52,11 +52,11 @@
 
     for (let i = row - 1; i <= row + 1; i++) {
       // skip iteration if exceeding board
-      if (i < 0 || i >= height) continue
+      if (i < 0 || i >= rows) continue
 
       for (let j = col - 1; j <= col + 1; j++) {
         // skip iteration if exceeding board
-        if (j < 0 || j >= width) continue
+        if (j < 0 || j >= columns) continue
         const button = boardMap[i][j]?.button
 
         if (button && !button.disabled) {
@@ -70,20 +70,30 @@
 </script>
 
 <!-- HTML -->
-{#each boardMap as row, i}
-  <div>
-    {#each row as { id, isBomb }, j (id)}
-      <Field
-        {isBomb}
-        neighborBombs={calcBombs(i, j)}
-        on:click={() => {
-          if (calcBombs(i, j) === 0) clickNeighbores(i, j)
-        }}
-        bind:button={boardMap[i][j].button}
-      />
-    {/each}
-  </div>
-{/each}
+<div class="gameboard">
+  {#each boardMap as row, i}
+    <div class="row">
+      {#each row as { id, isBomb }, j (id)}
+        <Field
+          {isBomb}
+          neighborBombs={calcBombs(i, j)}
+          on:click={() => {
+            if (calcBombs(i, j) === 0) clickNeighbores(i, j)
+          }}
+          bind:button={boardMap[i][j].button}
+        />
+      {/each}
+    </div>
+  {/each}
+</div>
 
 <!-- Style -->
-<style lang="scss"></style>
+<style lang="scss">
+  .gameboard {
+    overflow: visible;
+  }
+
+  .row {
+    white-space: nowrap;
+  }
+</style>
