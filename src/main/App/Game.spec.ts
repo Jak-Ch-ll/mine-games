@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/svelte"
 import userEvent from "@testing-library/user-event"
+import { mockRandom, resetMockRandom } from "jest-mock-random"
 import Game from "./Game.svelte"
 
 describe("file Game.svelte", () => {
@@ -15,6 +16,8 @@ describe("file Game.svelte", () => {
   const queryFields = () => screen.queryAllByRole("button", { name: "field" })
 
   const getBombInput = () => screen.getByRole("spinbutton", { name: "Bombs:" })
+  const getNewGameButton = () =>
+    screen.getByRole("button", { name: "New Game" })
 
   it("does not show a Gameboard on opening the app", () => {
     expect.hasAssertions()
@@ -162,6 +165,7 @@ describe("file Game.svelte", () => {
 
         it("starts the game with the correct number of bombs", async () => {
           expect.hasAssertions()
+
           render(Game)
           const bombInput = getBombInput()
           const button = getStartButton()
@@ -189,9 +193,6 @@ describe("file Game.svelte", () => {
   })
 
   describe("new game button", () => {
-    const getNewGameButton = () =>
-      screen.getByRole("button", { name: "New Game" })
-
     it("is only visible after the game starts", async () => {
       expect.hasAssertions()
       render(Game)
@@ -222,6 +223,153 @@ describe("file Game.svelte", () => {
 
       const form = screen.getByRole("form", { name: "setup" })
       expect(form).toBeInTheDocument()
+    })
+  })
+
+  describe("game logic", () => {
+    describe("losing game", () => {
+      const loseGame = async () => {
+        mockRandom(0)
+        const bombInput = getBombInput()
+        await userEvent.clear(bombInput)
+        await userEvent.type(bombInput, "1")
+        const startButton = getStartButton()
+        await userEvent.click(startButton)
+
+        const fields = getFields()
+        await userEvent.click(fields[0])
+      }
+
+      const winGame = async () => {
+        mockRandom(0)
+        const bombInput = getBombInput()
+        await userEvent.clear(bombInput)
+        await userEvent.type(bombInput, "1")
+        const startButton = getStartButton()
+        await userEvent.click(startButton)
+
+        const fields = getFields()
+        for (let i = 1; i < fields.length; i++) {
+          await userEvent.click(fields[i])
+        }
+      }
+
+      beforeEach(async () => {
+        jest.resetModules()
+        const Game = (await import("./Game.svelte")).default
+        render(Game)
+      })
+
+      afterEach(() => resetMockRandom())
+
+      describe("losing", () => {
+        it("does show 'Game Over' after clicking on a bomb", async () => {
+          expect.hasAssertions()
+
+          expect(document.body).not.toHaveTextContent(/Game Over/i)
+
+          await loseGame()
+
+          expect(document.body).toHaveTextContent(/Game Over/i)
+        })
+
+        it("does not show 'Game Over' during setup or after losing and starting a new game", async () => {
+          expect.hasAssertions()
+
+          expect(document.body).not.toHaveTextContent(/Game Over/i)
+
+          await loseGame()
+
+          const newGameButton = getNewGameButton()
+          await userEvent.click(newGameButton)
+
+          expect(document.body).not.toHaveTextContent(/Game Over/i)
+
+          const startButton = getStartButton()
+          await userEvent.click(startButton)
+
+          expect(document.body).not.toHaveTextContent(/Game Over/i)
+        })
+
+        it("disables all fields after losing the game", async () => {
+          expect.hasAssertions()
+
+          await loseGame()
+
+          const fields = getFields()
+
+          expect(fields[fields.length - 1]).toBeDisabled()
+        })
+      })
+
+      describe("winning", () => {
+        it("does show 'You Win' after clicking on all non-bomb-fields", async () => {
+          expect.hasAssertions()
+
+          expect(document.body).not.toHaveTextContent(/You Win/i)
+          await winGame()
+
+          expect(document.body).toHaveTextContent(/You Win/i)
+        })
+
+        it("disables all fields after winning the game", async () => {
+          expect.hasAssertions()
+
+          await winGame()
+
+          const fields = getFields()
+
+          expect(fields[0]).toBeDisabled()
+        })
+      })
+
+      describe("bomb counter", () => {
+        const prepareCounter = async (numBombs: `${number}`) => {
+          const bombInput = getBombInput()
+          await userEvent.clear(bombInput)
+          await userEvent.type(bombInput, numBombs)
+
+          const startButton = getStartButton()
+          await userEvent.click(startButton)
+        }
+
+        it("shows a counter of the currently possible bombs", async () => {
+          expect.hasAssertions()
+
+          const numBombs = "42"
+          await prepareCounter(numBombs)
+
+          const counter = screen.getByRole("status", { name: /bomb counter/i })
+          expect(counter).toHaveTextContent(numBombs)
+        })
+
+        it("is reduced after flagging a field", async () => {
+          expect.hasAssertions()
+
+          const numBombs = "10"
+          await prepareCounter(numBombs)
+
+          const fields = getFields()
+          await userEvent.click(fields[0], { button: 2 })
+
+          const counter = screen.getByRole("status", { name: /bomb counter/i })
+          expect(counter).toHaveTextContent("9")
+        })
+
+        it("increases after the flag is removed", async () => {
+          expect.hasAssertions()
+
+          const numBombs = "10"
+          await prepareCounter(numBombs)
+
+          const fields = getFields()
+          await userEvent.click(fields[0], { button: 2 })
+          await userEvent.click(fields[0], { button: 2 })
+
+          const counter = screen.getByRole("status", { name: /bomb counter/i })
+          expect(counter).toHaveTextContent(numBombs)
+        })
+      })
     })
   })
 })

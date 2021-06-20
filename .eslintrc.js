@@ -26,6 +26,8 @@ module.exports = {
     "svelte3/typescript": true,
     "svelte3/ignore-styles": () => true,
   },
-  rules: {},
+  rules: {
+    "jest/no-hooks": "off",
+  },
   ignorePatterns: ["*.config.*", ".eslintrc.*"],
 }

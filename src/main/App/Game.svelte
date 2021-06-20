@@ -1,24 +1,17 @@
 <script lang="ts">
-  import type { Coord } from "./Game/Gameboard.d"
-
   import Gameboard from "./Game/Gameboard.svelte"
+  import { gamestate } from "./gamestate"
+  import { generateBombCoordinates } from "./generateBombCoordinates"
 
   let gameStarted = false
   let columns = 10
   let rows = 10
   let bombs = 10
 
-  function generateBombCoordinates(numOfBombs: number) {
-    const coordinates = new Set<Coord>()
-
-    while (coordinates.size < numOfBombs) {
-      const row = Math.floor(Math.random() * rows)
-      const col = Math.floor(Math.random() * columns)
-
-      coordinates.add(`${row}/${col}`)
-    }
-
-    return coordinates
+  function startGame(): void {
+    gameStarted = true
+    $gamestate.safeFields = columns * rows - bombs
+    $gamestate.bombCounter = bombs
   }
 </script>
 
@@ -54,18 +47,31 @@
         />
       </label>
 
-      <button on:click|preventDefault={() => (gameStarted = true)} class="test"
+      <button on:click|preventDefault={startGame} class="test"
         >Start Game</button
       >
     </form>
   {:else}
     <div class="game">
-      <button on:click={() => (gameStarted = false)}>New Game</button>
+      <button
+        on:click={() => {
+          $gamestate.status = "Setup"
+          gameStarted = false
+        }}>New Game</button
+      >
+      <div role="status" aria-label="Bomb Counter">
+        Bombs Counter: {$gamestate.bombCounter}
+      </div>
       <Gameboard
         {columns}
         {rows}
-        bombCoordinates={generateBombCoordinates(bombs)}
+        bombCoordinates={generateBombCoordinates(rows, columns, bombs)}
       />
+      {#if $gamestate.status === "Lost"}
+        <div>Game Over</div>
+      {:else if $gamestate.status === "Won"}
+        <div>You Win</div>
+      {/if}
     </div>
   {/if}
 </div>

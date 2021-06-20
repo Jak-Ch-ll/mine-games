@@ -1,20 +1,23 @@
 import { render, screen, waitFor } from "@testing-library/svelte"
 import userEvent from "@testing-library/user-event"
 import type { BombCoordinates } from "./Gameboard.d"
-import Gameboard from "./Gameboard.svelte"
+// import Gameboard from "./Gameboard.svelte"
 
-describe("file Game.svelte", () => {
+describe("file Gameboard.svelte", () => {
   interface SetupProps {
     columns?: number
     rows?: number
     bombCoordinates?: BombCoordinates
   }
 
-  const setupAndReturnFields = ({
+  const setupAndReturnFields = async ({
     columns = 10,
     rows = 10,
     bombCoordinates,
   }: SetupProps) => {
+    // sandbox the component, so the tests dont share the store
+    jest.resetModules()
+    const Gameboard = (await import("./Gameboard.svelte")).default
     render(Gameboard, {
       columns,
       rows,
@@ -24,13 +27,13 @@ describe("file Game.svelte", () => {
     return screen.getAllByRole("button", { name: "field" })
   }
 
-  it("renders a number of fields depending on input", () => {
+  it("renders a number of fields depending on input", async () => {
     expect.hasAssertions()
 
     const columns = 21
     const rows = 23
 
-    const fields = setupAndReturnFields({ columns, rows })
+    const fields = await setupAndReturnFields({ columns, rows })
 
     expect(fields).toHaveLength(columns * rows)
   })
@@ -38,7 +41,7 @@ describe("file Game.svelte", () => {
   it("has a field with class 'bomb' after clicking on a bomb coordinate", async () => {
     expect.hasAssertions()
     const bombCoordinates: BombCoordinates = new Set(["0/0"])
-    const fields = setupAndReturnFields({ bombCoordinates })
+    const fields = await setupAndReturnFields({ bombCoordinates })
 
     const firstField = fields[0]
 
@@ -52,7 +55,7 @@ describe("file Game.svelte", () => {
   it("has no field with class bomb after clicking on non-bomb-coordinates", async () => {
     expect.hasAssertions()
     const bombCoordinates: BombCoordinates = new Set(["0/0"])
-    const fields = setupAndReturnFields({ bombCoordinates })
+    const fields = await setupAndReturnFields({ bombCoordinates })
 
     for (let i = 1; i < fields.length; i++) {
       const field = fields[i]
@@ -65,7 +68,7 @@ describe("file Game.svelte", () => {
   it("renders fields with the correct number of bombs for non-bomb-fields", async () => {
     expect.hasAssertions()
     const bombCoordinates: BombCoordinates = new Set(["0/1", "1/0", "1/1"])
-    const fields = setupAndReturnFields({ bombCoordinates })
+    const fields = await setupAndReturnFields({ bombCoordinates })
 
     const firstField = fields[0]
 
@@ -76,7 +79,7 @@ describe("file Game.svelte", () => {
 
   it("clicks on all neighboring fields if clicked on a field with 0 neighboring bombs", async () => {
     expect.hasAssertions()
-    const fields = setupAndReturnFields({})
+    const fields = await setupAndReturnFields({})
 
     const firstField = fields[0]
     const lastField = fields[fields.length - 1]
@@ -90,7 +93,7 @@ describe("file Game.svelte", () => {
     expect.hasAssertions()
 
     const bombCoordinates: BombCoordinates = new Set(["0/2"])
-    const fields = setupAndReturnFields({ bombCoordinates })
+    const fields = await setupAndReturnFields({ bombCoordinates })
 
     const [first, second, third] = fields
     const lastField = fields[fields.length - 1]

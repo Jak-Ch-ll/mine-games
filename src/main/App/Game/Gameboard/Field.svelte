@@ -1,16 +1,30 @@
 <script lang="ts">
+  import { gamestate } from "../../gamestate"
+
   export let isBomb = false
   export let neighborBombs = 0
   export let button: HTMLButtonElement | null = null
 
   let status: "neutral" | "flagged" | "maybe" | "safe" | "bomb" = "neutral"
-  $: disabled = status === "safe" || status === "bomb"
+  $: disabled =
+    status === "safe" ||
+    status === "bomb" ||
+    $gamestate.status === "Lost" ||
+    $gamestate.status === "Won"
   $: textContent = disabled && neighborBombs ? neighborBombs : null
 
   function handleLeftClick() {
     if (status === "neutral") {
-      if (isBomb) status = "bomb"
-      else status = "safe"
+      if (isBomb) {
+        status = "bomb"
+        $gamestate.status = "Lost"
+      } else {
+        status = "safe"
+        $gamestate.safeFields--
+        if ($gamestate.safeFields === 0) {
+          $gamestate.status = "Won"
+        }
+      }
     }
   }
 
@@ -18,9 +32,11 @@
     switch (status) {
       case "neutral":
         status = "flagged"
+        $gamestate.bombCounter--
         break
       case "flagged":
         status = "maybe"
+        $gamestate.bombCounter++
         break
       case "maybe":
         status = "neutral"
@@ -38,9 +54,9 @@
   on:contextmenu|preventDefault={handleRightClick}
   bind:this={button}
 >
-  {#if status === "bomb"}
+  {#if status === "bomb" || (isBomb && $gamestate.status === "Lost")}
     💣
-  {:else if textContent}
+  {:else if textContent && !isBomb}
     {textContent}
   {:else if status === "flagged"}
     🚩
