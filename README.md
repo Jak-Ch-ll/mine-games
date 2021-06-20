@@ -14,9 +14,9 @@ I learned quite a bit about svelte and wanted to try it out with a mini-project.
 - [x] Setup
   - [x] number of fields
   - [x] number of bombs
-- [ ] Game logic
-  - [ ] Game is winnable and losable
-  - [ ] Visible bomb counter
+- [x] Game logic
+  - [x] Game is winnable and losable
+  - [x] Visible bomb counter
 - [ ] Styling
   - [x] Basic
   - [ ] Actually something nice looking
